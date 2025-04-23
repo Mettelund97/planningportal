@@ -1,10 +1,11 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { auth } from '../firebase/config';
 import { signOut } from 'firebase/auth';
 
 const router = useRouter();
+const route = useRoute(); // Add this to access current route
 const isLoading = ref(false);
 const showMobileMenu = ref(false);
 
@@ -23,6 +24,11 @@ const handleLogout = async () => {
 const toggleMobileMenu = () => {
   showMobileMenu.value = !showMobileMenu.value;
 };
+
+// Check if a route is active (more explicit check)
+const isRouteActive = (path) => {
+  return route.path === path;
+};
 </script>
 
 <template>
@@ -39,8 +45,8 @@ const toggleMobileMenu = () => {
       <div class="nav-right">
         <div class="nav-links-container-desktop">
           <div class="nav-links desktop-links">
-            <router-link to="/dashboard" class="nav-link">Dashboard</router-link>
-            <router-link to="/kalender" class="nav-link">Egen kalender</router-link>
+            <router-link to="/dashboard" class="nav-link" :class="{ 'active': isRouteActive('/dashboard') }">Dashboard</router-link>
+            <router-link to="/kalender" class="nav-link" :class="{ 'active': isRouteActive('/kalender') }">Egen kalender</router-link>
           </div>
           <div class="logout-button-container">
             <button 
@@ -66,10 +72,10 @@ const toggleMobileMenu = () => {
     
     <!-- Mobile Navigation Menu -->
     <div class="mobile-nav" :class="{ 'show': showMobileMenu }">
-      <router-link to="/dashboard" class="mobile-nav-link" @click="showMobileMenu = false">
+      <router-link to="/dashboard" class="mobile-nav-link" :class="{ 'active': isRouteActive('/dashboard') }" @click="showMobileMenu = false">
         Dashboard
       </router-link>
-      <router-link to="/kalender" class="mobile-nav-link" @click="showMobileMenu = false">
+      <router-link to="/kalender" class="mobile-nav-link" :class="{ 'active': isRouteActive('/kalender') }" @click="showMobileMenu = false">
         Egen kalender
       </router-link>
       <button @click="handleLogout" class="mobile-logout-button" :disabled="isLoading">
@@ -148,11 +154,11 @@ const toggleMobileMenu = () => {
       position: relative;
       transition: color 0.3s;
       
-      &:hover, &.router-link-active {
+      &:hover, &.router-link-active, &.active {
         color: $primary-color;
       }
       
-      &.router-link-active:after {
+      &.router-link-active:after, &.active:after {
         content: '';
         position: absolute;
         bottom: 0;
@@ -245,7 +251,7 @@ const toggleMobileMenu = () => {
       font-size: 18px;
       border-bottom: 1px solid #eee;
       
-      &:hover, &.router-link-active {
+      &:hover, &.router-link-active, &.active {
         color: $primary-color;
       }
     }

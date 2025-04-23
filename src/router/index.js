@@ -8,7 +8,9 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/login'
+      name: 'Dashboard',
+      component: () => import('@/views/DashboardView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/login',
@@ -16,40 +18,53 @@ const router = createRouter({
       component: LoginView,
       meta: { requiresGuest: true }
     },
-    {
-      path: '/dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/DashboardView.vue'),
-      meta: { requiresAuth: true }
-    },
-    // Add more authenticated routes here
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/login'
-    }
   ],
 })
 
+// Global auth state
+let currentUser = null;
+let authInitialized = false;
+
+// Set up global auth listener
+onAuthStateChanged(auth, (user) => {
+  currentUser = user;
+  authInitialized = true;
+});
+
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const requiresGuest = to.matched.some(record => record.meta.requiresGuest);
 
-  // Get current user
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    unsubscribe()
+  // If auth not yet initialized, wait briefly before proceeding
+  if (!authInitialized) {
+    const waitForAuth = () => {
+      if (authInitialized) {
+        // Auth is ready, now apply routing rules
+        if (requiresAuth && !currentUser) {
+          next('/login');
+        } else if (requiresGuest && currentUser) {
+          next('/');
+        } else {
+          next();
+        }
+      } else {
+        // Check again in a short while
+        setTimeout(waitForAuth, 50);
+      }
+    };
     
-    if (requiresAuth && !user) {
-      // If route requires auth and user is not logged in
-      next('/login')
-    } else if (requiresGuest && user) {
-      // If route is only for guests and user is logged in
-      next('/dashboard')
-    } else {
-      // Otherwise proceed normally
-      next()
-    }
-  })
+    waitForAuth();
+    return;
+  }
+  
+  // Auth is already initialized, apply routing rules immediately
+  if (requiresAuth && !currentUser) {
+    next('/login');
+  } else if (requiresGuest && currentUser) {
+    next('/');
+  } else {
+    next();
+  }
 })
-
 
 export default router
