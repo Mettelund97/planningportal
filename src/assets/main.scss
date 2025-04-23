@@ -1,0 +1,23 @@
+@use 'variables' as *;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: 16px;
+  line-height: 1.5;
+  color: black;
+  background-color: white;
+}
+
+$primary-color: #3498db;
+$secondary-color: #2980b9;
+$text-color: #333;
+$nav-height: 70px;
+$mobile-breakpoint: 768px;
